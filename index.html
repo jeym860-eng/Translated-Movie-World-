@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TMW — Translated Movie World</title>
+<style>
+  :root{
+    --bg:#000;
+    --panel:#0b0b0b;
+    --accent:#e02020;
+    --muted:#9aa4b2;
+    --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  /* HEADER / NAV */
+  header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:3px solid var(--accent);position:relative;z-index:100}
+  .brand{font-weight:800;color:var(--accent);font-size:20px}
+  nav{display:flex;gap:16px;align-items:center;margin-left:12px}
+  nav a{color:#fff;text-decoration:none;padding:8px;border-radius:8px;font-weight:700;cursor:pointer}
+  nav a:hover{background:rgba(224,32,32,0.06);color:var(--accent)}
+  .nav-right{margin-left:auto;display:flex;gap:10px;align-items:center;position:relative}
+  /* option icons */
+  .optbar{display:flex;gap:8px;align-items:center}
+  .opt-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+  .opt-icon:hover{background:rgba(224,32,32,0.08)}
+  /* small dropdowns */
+  .dropdown{position:absolute;background:#0b0b0b;border:1px solid var(--glass);padding:10px;border-radius:8px;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none}
+  .dropdown.show{display:block}
+  .dropdown .row{display:flex;gap:8px;align-items:center}
+  .avatar-small{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.04)}
+  .profile-line{font-weight:800;color:#fff}
+  .profile-sub{color:var(--muted);font-size:13px}
+  /* search under nav */
+  .search-row{display:flex;justify-content:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.02)}
+  .search-wrap{width:90%;max-width:760px;display:flex;gap:8px;align-items:center}
+  .search-input{flex:1;padding:12px 14px;border-radius:999px;border:1px solid var(--glass);background:#0b0b0b;color:#fff;outline:none}
+  .search-btn{background:var(--accent);border:none;padding:10px 12px;border-radius:999px;color:#fff;font-weight:700;cursor:pointer}
+  /* welcome */
+  .welcome{padding:16px;text-align:center;background:linear-gradient(90deg,rgba(224,32,32,0.04),transparent);color:var(--accent);font-weight:700;border-bottom:1px solid rgba(255,255,255,0.02)}
+  /* main content */
+  main{max-width:1200px;margin:18px auto;padding:0 12px}
+  .row{margin-bottom:22px}
+  .rowHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .rowTitle{font-weight:800;color:#fff}
+  .rowScroller{display:flex;gap:12px;overflow-x:auto;padding:6px 6px 12px}
+  .card{flex:0 0 170px;background:linear-gradient(180deg,#0d0d0d,#0b0b0b);border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);min-width:170px}
+  .poster{height:260px;background:#111}
+  .poster img{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{padding:8px}
+  .title{font-size:14px;color:#fff;font-weight:700;margin:0 0 6px 0}
+  .views{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .streamBtn{display:block;width:86%;margin:0 auto 10px;padding:8px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:800;cursor:pointer;transition:transform .18s,box-shadow .18s}
+  .streamBtn:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(224,32,32,0.18)}
+  .playerMini{height:96px;background:#000;border-radius:6px;margin:8px;padding:6px;display:flex;align-items:center;justify-content:center}
+  .playerMini video{width:100%;height:100%;object-fit:cover;border-radius:6px}
+  /* subscription page */
+  .subscriptionPage{background:var(--panel);padding:18px;border-radius:10px;margin:12px 0}
+  .plan{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:8px;background:#0e0e0e;margin-bottom:10px;border:1px solid rgba(255,255,255,0.02)}
+  .plan .info{max-width:70%}
+  .plan h3{margin:0;color:var(--accent)}
+  .plan small{color:var(--muted)}
+  .plan a{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:800}
+  .plan .code{font-size:12px;color:var(--muted);margin-top:6px;text-align:right}
+  /* chat */
+  .chatBox{background:#0c0c0c;padding:12px;border-radius:8px;min-height:220px;max-height:300px;overflow:auto}
+  .chatInput{display:flex;gap:8px;margin-top:8px}
+  .chatInput input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#0b0b0b;color:#fff}
+  .chatInput button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:800;cursor:pointer}
+  footer{padding:18px;text-align:center;color:var(--muted);margin-top:28px;border-top:1px solid rgba(255,255,255,0.02)}
+  /* admin modals */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:9999}
+  .modalPanel{background:#0b0b0b;padding:18px;border-radius:10px;border:1px solid var(--glass);width:95%;max-width:1100px;max-height:90vh;overflow:auto}
+  /* small helpers */
+  .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .small{font-size:13px;color:var(--muted)}
+  input[type=file]{color:#fff}
+  @media (max-width:900px){ .card{min-width:140px} .poster{height:200px} .dropdown{min-width:180px} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">TMW</div>
+
+  <nav>
+    <a onclick="showSection('home',event)">Home</a>
+    <a onclick="showSection('movies',event)">Movies</a>
+    <a onclick="showSection('subscription',event)">Subscription</a>
+    <a onclick="showSection('chat',event)">Chat</a>
+  </nav>
+
+  <div class="nav-right">
+    <!-- OPTIONS (icons only) -->
+    <div class="optbar" style="position:relative">
+      <div class="opt-icon" title="Profile" id="profileIcon" onclick="toggleDropdown('profileDrop', this)">
+        <!-- profile small placeholder -->
+        <span id="profileIconImg" style="font-weight:800;color:var(--accent)">👤</span>
+      </div>
+      <div class="opt-icon" title="Settings" onclick="toggleDropdown('settingsDrop', this)">⚙️</div>
+      <div class="opt-icon" title="Logout" onclick="doLogout()">🚪</div>
+
+      <!-- PROFILE DROPDOWN -->
+      <div id="profileDrop" class="dropdown" style="right:0;top:48px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <img id="profilePicSmall" class="avatar-small" src="" alt="avatar" />
+          <div>
+            <div class="profile-line" id="profileName">Guest</div>
+            <div class="profile-sub" id="profileStatus">No subscription</div>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:8px 0" />
+        <label style="font-size:13px;color:var(--muted)">Upload profile picture</label>
+        <input type="file" accept="image/*" id="uploadAvatar" />
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn" onclick="openProfileEditor()">Edit Profile</button>
+          <button class="ghost" onclick="closeDropdown('profileDrop')">Close</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS DROPDOWN -->
+      <div id="settingsDrop" class="dropdown" style="right:60px;top:48px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div><strong>Settings</strong></div>
+          <label class="small">Theme color</label>
+          <div style="display:flex;gap:8px">
+            <button class="ghost" onclick="setAccent('#e02020')" style="background:#e02020;width:36px;height:36px;border-radius:6px;border:none"></button>
+            <button class="ghost" onclick="setAccent('#0e5bff')" style="background:#0e5bff;width:36px;height:36px;border-radius:6px;border:none"></button>
+            <button class="ghost" onclick="setAccent('#17a589')" style="background:#17a589;width:36px;height:36px;border-radius:6px;border:none"></button>
+          </div>
+          <label class="small" style="margin-top:6px">Account</label>
+          <button class="ghost" onclick="openProfileEditor()">Open profile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- search placed under nav -->
+<div class="search-row">
+  <div class="search-wrap">
+    <input id="searchInput" class="search-input" placeholder="🔍 Search for a movie or category..." oninput="doSearch()" />
+    <button class="search-btn" onclick="doSearch()">Search</button>
+  </div>
+</div>
+
+<div class="welcome">
+  OUR DEAR BELOVED CUSTOMERS, THANK YOU FOR JOINING OUR OFFICIAL WEBSITE FOR THE LATEST TRANSLATED MOVIES.
+</div>
+
+<main id="main">
+  <!-- featured rows -->
+  <section id="home" class="section">
+    <div class="row">
+      <div class="rowHeader"><div class="rowTitle">Featured</div><div class="small">Top picks</div></div>
+      <div class="rowScroller" id="row-featured"></div>
+    </div>
+
+    <div class="row">
+      <div class="rowHeader"><div class="rowTitle">New Releases</div><div class="small">Fresh</div></div>
+      <div class="rowScroller" id="row-new"></div>
+    </div>
+
+    <div class="row">
+      <div class="rowHeader"><div class="rowTitle">Action & Thrillers</div><div class="small">High energy</div></div>
+      <div class="rowScroller" id="row-action"></div>
+    </div>
+  </section>
+
+  <!-- movies grid -->
+  <section id="movies" class="section" style="display:none">
+    <h2 style="color:var(--accent)">All Movies</h2>
+    <div id="allGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px"></div>
+  </section>
+
+  <!-- subscription -->
+  <section id="subscription" class="section" style="display:none">
+    <h2 style="color:var(--accent)">Subscription Plans</h2>
+    <div class="subscriptionPage">
+      <div class="plan">
+        <div class="info">
+          <h3>UGX 1,000 — Daily</h3>
+          <small>Valid 1 day • Up to 5 movies</small>
+        </div>
+        <div style="text-align:right">
+          <a class="btn" href="tel:*185*1*1*0742582989*1000%23">Pay Now (Airtel)</a>
+          <div class="code small">Dial: *185*1*1*0742582989*1000#</div>
+        </div>
+      </div>
+
+      <div class="plan">
+        <div class="info">
+          <h3>UGX 5,000 — Weekly</h3>
+          <small>Valid 7 days • Up to 15 movies</small>
+        </div>
+        <div style="text-align:right">
+          <a class="btn" href="tel:*185*1*1*0742582989*5000%23">Pay Now (Airtel)</a>
+          <div class="code small">Dial: *185*1*1*0742582989*5000#</div>
+        </div>
+      </div>
+
+      <div class="plan">
+        <div class="info">
+          <h3>UGX 15,000 — Monthly</h3>
+          <small>Valid 30 days • All movies</small>
+        </div>
+        <div style="text-align:right">
+          <a class="btn" href="tel:*185*1*1*0742582989*15000%23">Pay Now (Airtel)</a>
+          <div class="code small">Dial: *185*1*1*0742582989*15000#</div>
+        </div>
+      </div>
+
+      <div class="small" style="margin-top:8px">After payment, admin verifies and activates the subscription (demo uses local verification in Admin Dashboard).</div>
+    </div>
+  </section>
+
+  <!-- chat -->
+  <section id="chat" class="section" style="display:none">
+    <h2 style="color:var(--accent)">Chat with Admin</h2>
+    <div class="chatBox" id="chatBox" aria-live="polite"></div>
+    <div class="chatInput">
+      <input id="chatMessage" placeholder="Type your message..." />
+      <button onclick="sendChat()">Send</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>Pay via Airtel Money to <strong>0742582989</strong> • Support: WhatsApp 0742582989 | Call 0747329915</div>
+  <div style="margin-top:6px;color:var(--muted)">© <span id="year"></span> Translated Movie World (TMW)</div>
+</footer>
+
+<!-- ADMIN LOGIN / DASHBOARD (kept from previous demo) -->
+<div class="modal" id="adminLoginModal">
+  <div class="modalPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="color:var(--accent);margin:0">Admin Login</h2><button class="ghost" onclick="closeAdminLogin()">Close</button></div>
+    <div style="margin-top:12px">
+      <label>Password</label>
+      <input id="adminPassword" type="password" placeholder="Enter admin password" />
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn" onclick="doAdminLogin()">Login</button>
+        <button class="ghost" onclick="fillDemoAdmin()">Demo Fill</button>
+      </div>
+      <div class="small" style="margin-top:10px">Admin password is required to access the dashboard.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modalPanel" id="adminPanelContent">
+    <!-- admin content is injected by script -->
+  </div>
+</div>
+
+<!-- PROFILE EDITOR (modal) -->
+<div class="modal" id="profileEditor">
+  <div class="modalPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="color:var(--accent);margin:0">Edit Profile</h2><button class="ghost" onclick="closeProfileEditor()">Close</button></div>
+    <div style="margin-top:12px">
+      <label>Username</label>
+      <input id="profileUsername" type="text" placeholder="Your display name" />
+      <label>Phone or Email</label>
+      <input id="profileContact" type="text" placeholder="Phone or email" />
+      <label>Profile picture</label>
+      <input id="profilePicFile" type="file" accept="image/*" />
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn" onclick="saveProfile()">Save</button>
+        <button class="ghost" onclick="closeProfileEditor()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================
+   Local persistence keys & helpers
+   ============================ */
+const KEY_USER = 'tmw_user_v1';
+const KEY_MOVIES = 'tmw_movies_v1';
+const KEY_SUBS = 'tmw_subs_v1';
+const KEY_CHATS = 'tmw_chats_v1';
+const ADMIN_PW = 'Iloveyoutracy';
+
+function read(key){ try{ return JSON.parse(localStorage.getItem(key)); } catch(e){ return null; } }
+function write(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* ============================
+   Initial sample movies (10 real posters & trailers)
+   ============================ */
+const SAMPLE = [
+  {id:1,title:'Extraction',poster:'https://m.media-amazon.com/images/I/81M6HfZ7bIL._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=L6P3nI6VnlY',views:245000,cat:'Action'},
+  {id:2,title:'John Wick: Chapter 4',poster:'https://m.media-amazon.com/images/I/81QMd3q2S5L._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=tt2k8PGm-TI',views:421000,cat:'Action'},
+  {id:3,title:'Dune',poster:'https://m.media-amazon.com/images/I/91kFYg4fX3L._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=n9xhJrPXop4',views:512000,cat:'Sci-Fi'},
+  {id:4,title:'Glass Onion',poster:'https://m.media-amazon.com/images/I/81t5q1nAkgL._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=ImM7lD8wq7Y',views:198000,cat:'Mystery'},
+  {id:5,title:'The Gray Man',poster:'https://m.media-amazon.com/images/I/81qFQJpJk5L._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=4TJm3f3g3N4',views:170000,cat:'Action'},
+  {id:6,title:'Avatar: The Way of Water',poster:'https://m.media-amazon.com/images/I/81k8wowpK6L._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=Eo6i1Gxk7kU',views:620000,cat:'Adventure'},
+  {id:7,title:'No Time To Die',poster:'https://m.media-amazon.com/images/I/81YF8f4LQ-L._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=BIhNsAtPbPI',views:480000,cat:'Action'},
+  {id:8,title:'Red Notice',poster:'https://m.media-amazon.com/images/I/91vQYk6r9tL._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=Pj0wz7zu3Ms',views:360000,cat:'Action'},
+  {id:9,title:'The Batman',poster:'https://m.media-amazon.com/images/I/71pVzI2WkYL._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=mqqft2x_Aa4',views:540000,cat:'Action'},
+  {id:10,title:'Spider-Man: No Way Home',poster:'https://m.media-amazon.com/images/I/81Q2L3m4JNL._AC_SL1500_.jpg',trailer:'https://www.youtube.com/watch?v=JfVOs4VSpmA',views:890000,cat:'Action'}
+];
+
+function ensureData(){
+  if(!read(KEY_MOVIES)) write(KEY_MOVIES, SAMPLE);
+  if(!read(KEY_SUBS)) write(KEY_SUBS, []);
+  if(!read(KEY_CHATS)) write(KEY_CHATS, []);
+  if(!read(KEY_USER)) write(KEY_USER, {name:'Guest', contact:'', avatar:'', joined:Date.now(), sub:null});
+}
+ensureData();
+
+/* ============================
+   Render functions for public site
+   ============================ */
+function makeCard(m){
+  const d = document.createElement('div'); d.className='card';
+  d.innerHTML = `
+    <div class="poster"><img src="${m.poster}" alt="${m.title}" loading="lazy"></div>
+    <div class="meta">
+      <div class="title">${m.title}</div>
+      <div class="views">${formatViews(m.views)} views</div>
+      <div class="playerMini"><video muted preload="metadata" playsinline src="${m.trailer}"></video></div>
+      <button class="streamBtn" onclick="tryStream(${m.id})">Stream (new window)</button>
+    </div>
+  `;
+  return d;
+}
+function formatViews(n){ if(!n) return 0; if(n>=1000000) return (n/1000000).toFixed(1)+'M'; if(n>=1000) return (n/1000).toFixed(1)+'K'; return n; }
+
+function populateUI(){
+  const movies = read(KEY_MOVIES) || [];
+  const f = document.getElementById('row-featured'); f.innerHTML=''; movies.slice(0,5).forEach(m=> f.appendChild(makeCard(m)));
+  const n = document.getElementById('row-new'); n.innerHTML=''; movies.slice(5,10).forEach(m=> n.appendChild(makeCard(m)));
+  const a = document.getElementById('row-action'); a.innerHTML=''; movies.filter(x=>x.cat==='Action' || x.cat==='Sci-Fi').slice(0,8).forEach(m=> a.appendChild(makeCard(m)));
+  const all = document.getElementById('allGrid'); all.innerHTML=''; movies.forEach(m=> all.appendChild(makeCard(m)));
+  // profile small
+  const u = read(KEY_USER) || {};
+  document.getElementById('profileName').innerText = u.name || 'Guest';
+  document.getElementById('profileStatus').innerText = u.sub ? 'Subscribed' : 'No subscription';
+  const pic = u.avatar || '';
+  const small = document.getElementById('profilePicSmall');
+  const icon = document.getElementById('profileIconImg');
+  if(pic){ small.src = pic; small.style.display='block'; icon.style.display='none'; } else { small.src=''; small.style.display='none'; icon.style.display='block'; }
+  // also show small icon in header (if avatar set)
+  const headerPic = document.getElementById('profilePicSmall');
+  const prIcon = document.getElementById('profileIconImg');
+  if(pic){ prIcon.style.display='none'; headerPic.style.display='block'; headerPic.src = pic; } else { prIcon.style.display='block'; headerPic.style.display='none'; }
+}
+populateUI();
+
+/* ============================
+   Search & Nav
+   ============================ */
+function doSearch(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(c=>{
+    const t = c.querySelector('.title').innerText.toLowerCase();
+    c.style.display = t.includes(q) ? '' : 'none';
+  });
+}
+function showSection(id,e){
+  if(e) e && e.preventDefault && e.preventDefault();
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================
+   Subscription & stream
+   ============================ */
+function hasActiveSub(){
+  const user = read(KEY_USER);
+  if(!user || !user.sub) return false;
+  return user.sub.expires > Date.now();
+}
+function tryStream(id){
+  if(!hasActiveSub()){
+    alert('You need an active subscription to watch. Go to Subscription and follow the Airtel payment instructions.');
+    showSection('subscription');
+    return;
+  }
+  const movies = read(KEY_MOVIES) || [];
+  const m = movies.find(x=>x.id===id);
+  if(!m) return;
+  // increment views
+  m.views = (m.views || 0) + 1;
+  write(KEY_MOVIES, movies);
+  populateUI();
+  window.open(m.trailer,'_blank');
+}
+
+/* ============================
+   Chat (public)
+   ============================ */
+function renderChatBox(){
+  const box = document.getElementById('chatBox'); box.innerHTML='';
+  const chats = read(KEY_CHATS) || [];
+  chats.forEach(c=>{
+    const el = document.createElement('div');
+    el.style.padding='8px'; el.style.borderBottom='1px solid rgba(255,255,255,0.02)';
+    el.innerHTML = `<strong style="color:var(--accent)">${c.name||'Guest'}</strong> <small style="color:var(--muted)"> • ${c.time}</small><div style="margin-top:6px;color:#ddd">${c.text}</div>${c.reply?`<div style="margin-top:8px;padding:8px;background:#0b0b0b;border-radius:6px;color:#cfe4ff">Admin: ${c.reply}</div>`:''}`;
+    box.appendChild(el);
+  });
+}
+function sendChat(){
+  const input = document.getElementById('chatMessage'); const txt = input.value.trim(); if(!txt) return;
+  const chats = read(KEY_CHATS) || [];
+  const user = read(KEY_USER) || {};
+  chats.push({ name: user.name || 'Guest', text: txt, time: new Date().toLocaleString() });
+  write(KEY_CHATS, chats);
+  input.value=''; renderChatBox();
+  updateChatCount();
+}
+function updateChatCount(){ const chats = read(KEY_CHATS)||[]; /* could show count in admin */ }
+
+/* ============================
+   PROFILE: upload & editor (local) - "real" for now stored in storage
+   ============================ */
+document.getElementById('uploadAvatar').addEventListener('change', (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){ const data = ev.target.result; const u = read(KEY_USER)||{}; u.avatar = data; write(KEY_USER, u); populateUI(); alert('Profile picture updated. Open profile to save other details if needed.'); }
+  reader.readAsDataURL(f);
+});
+
+function openProfileEditor(){
+  const u = read(KEY_USER) || {};
+  document.getElementById('profileUsername').value = u.name || '';
+  document.getElementById('profileContact').value = u.contact || '';
+  document.getElementById('profileEditor').style.display='flex';
+}
+function closeProfileEditor(){ document.getElementById('profileEditor').style.display='none'; }
+function saveProfile(){
+  const name = document.getElementById('profileUsername').value.trim() || 'Guest';
+  const contact = document.getElementById('profileContact').value.trim() || '';
+  const file = document.getElementById('profilePicFile').files[0];
+  if(file){
+    const r = new FileReader();
+    r.onload = function(ev){
+      const data = ev.target.result;
+      const u = read(KEY_USER) || {};
+      u.name = name; u.contact = contact; u.avatar = data; u.joined = u.joined || Date.now();
+      write(KEY_USER, u); closeProfileEditor(); populateUI(); alert('Profile saved.');
+    }
+    r.readAsDataURL(file);
+  } else {
+    const u = read(KEY_USER) || {};
+    u.name = name; u.contact = contact; u.joined = u.joined || Date.now();
+    write(KEY_USER, u); closeProfileEditor(); populateUI(); alert('Profile saved.');
+  }
+}
+
+/* ============================
+   OPTION BAR interactions
+   ============================ */
+function toggleDropdown(id, btn){
+  closeAllDropdowns();
+  const el = document.getElementById(id);
+  if(!el) return;
+  const rect = btn.getBoundingClientRect();
+  el.classList.toggle('show');
+}
+function closeDropdown(id){ const el = document.getElementById(id); if(el) el.classList.remove('show'); }
+function closeAllDropdowns(){ document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show')); }
+window.addEventListener('click', function(e){
+  const inside = e.target.closest('.optbar');
+  if(!inside) closeAllDropdowns();
+});
+
+/* ============================
+   ADMIN login & panel (local)
+   ============================ */
+function openAdminLogin(){ document.getElementById('adminLoginModal').style.display='flex'; }
+function closeAdminLogin(){ document.getElementById('adminLoginModal').style.display='none'; }
+function doAdminLogin(){
+  const val = document.getElementById('adminPassword').value || '';
+  if(val === ADMIN_PW){
+    document.getElementById('adminPassword').value='';
+    closeAdminLogin();
+    openAdminPanel();
+  } else alert('Incorrect password');
+}
+function openAdminPanel(){
+  document.getElementById('adminModal').style.display='flex';
+  renderAdmin();
+}
+function closeAdminPanel(){ document.getElementById('adminModal').style.display='none'; }
+function logoutAdmin(){ localStorage.removeItem('adminAuth'); closeAdminPanel(); alert('Admin logged out'); }
+
+/* Simple admin UI (visual) */
+function renderAdmin(){
+  const panel = document.getElementById('adminPanelContent');
+  const movies = read(KEY_MOVIES) || [];
+  const subs = read(KEY_SUBS) || [];
+  const chats = read(KEY_CHATS) || [];
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h2 style="color:var(--accent);margin:0">TMW Admin Dashboard</h2>
+      <div style="display:flex;gap:8px">
+        <button class="ghost" onclick="closeAdminPanel()">Close</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+      <div style="background:#0d0d0d;padding:12px;border-radius:8px"><h3>Movies</h3><div class="small">${movies.length} movies</div><div style="margin-top:8px"><button class="btn" onclick="adminShowAdd()">Add Movie</button> <button class="ghost" onclick="adminListMovies()">Manage</button></div></div>
+      <div style="background:#0d0d0d;padding:12px;border-radius:8px"><h3>Subscriptions</h3><div class="small">${subs.length} orders</div><div style="margin-top:8px"><button class="btn" onclick="adminListSubs()">View Orders</button></div></div>
+      <div style="background:#0d0d0d;padding:12px;border-radius:8px"><h3>Chat</h3><div class="small">${chats.length} messages</div><div style="margin-top:8px"><button class="btn" onclick="adminOpenChat()">Open Chat</button></div></div>
+    </div>
+    <div id="adminWork" style="margin-top:12px"></div>
+  `;
+}
+
+/* Admin helpers (simple) */
+function adminShowAdd(){
+  const w = document.getElementById('adminWork');
+  w.innerHTML = `
+    <h3>Add Movie</h3>
+    <label>Title</label><input id="admTitle" type="text" />
+    <label>Category</label><input id="admCat" type="text" />
+    <label>Poster URL</label><input id="admPoster" type="url" />
+    <label>Trailer URL</label><input id="admTrailer" type="url" />
+    <div style="margin-top:8px"><button class="btn" onclick="adminAddMovie()">Add</button> <button class="ghost" onclick="renderAdmin()">Cancel</button></div>
+  `;
+}
+function adminAddMovie(){
+  const t = document.getElementById('admTitle').value.trim(); if(!t) return alert('Title required');
+  const cat = document.getElementById('admCat').value.trim() || 'Uncategorized';
+  const poster = document.getElementById('admPoster').value.trim() || 'https://via.placeholder.com/360x540?text=Poster';
+  const trailer = document.getElementById('admTrailer').value.trim() || '';
+  const movies = read(KEY_MOVIES) || []; movies.push({id:Date.now(), title:t, poster:poster, trailer:trailer, views:0, cat:cat});
+  write(KEY_MOVIES, movies); populateUI(); renderAdmin(); alert('Movie added.');
+}
+function adminListMovies(){
+  const movies = read(KEY_MOVIES) || []; const w = document.getElementById('adminWork');
+  let html = '<h3>Manage Movies</h3><table style="width:100%"><tr><th>Poster</th><th>Title</th><th>Cat</th><th>Views</th><th>Action</th></tr>';
+  movies.forEach(m=> html += `<tr><td style="width:70px"><img src="${m.poster}" style="width:60px;height:60px;object-fit:cover;border-radius:6px"/></td><td>${m.title}</td><td>${m.cat}</td><td>${m.views}</td><td><button class="btn" onclick="adminEdit(${m.id})">Edit</button> <button class="ghost" onclick="adminDelete(${m.id})">Delete</button></td></tr>`);
+  html += '</table><div style="margin-top:8px"><button class="ghost" onclick="renderAdmin()">Back</button></div>';
+  w.innerHTML = html;
+}
+function adminEdit(id){
+  const movies = read(KEY_MOVIES) || []; const m = movies.find(x=>x.id===id); if(!m) return;
+  const w = document.getElementById('adminWork');
+  w.innerHTML = `<h3>Edit Movie</h3><label>Title</label><input id="editTitle" value="${m.title}" /><label>Cat</label><input id="editCat" value="${m.cat}" /><label>Poster</label><input id="editPoster" value="${m.poster}" /><label>Trailer</label><input id="editTrailer" value="${m.trailer}" /><div style="margin-top:8px"><button class="btn" onclick="adminSaveEdit(${m.id})">Save</button> <button class="ghost" onclick="adminListMovies()">Cancel</button></div>`;
+}
+function adminSaveEdit(id){
+  const movies = read(KEY_MOVIES) || []; const i = movies.findIndex(x=>x.id===id); if(i<0) return;
+  movies[i].title = document.getElementById('editTitle').value.trim() || movies[i].title;
+  movies[i].cat = document.getElementById('editCat').value.trim() || movies[i].cat;
+  movies[i].poster = document.getElementById('editPoster').value.trim() || movies[i].poster;
+  movies[i].trailer = document.getElementById('editTrailer').value.trim() || movies[i].trailer;
+  write(KEY_MOVIES, movies); populateUI(); adminListMovies(); alert('Saved');
+}
+function adminDelete(id){ if(!confirm('Delete movie?')) return; let movies = read(KEY_MOVIES)||[]; movies = movies.filter(x=>x.id!==id); write(KEY_MOVIES, movies); populateUI(); adminListMovies(); }
+
+/* subscriptions admin */
+function adminListSubs(){
+  const subs = read(KEY_SUBS) || []; const w = document.getElementById('adminWork');
+  let html = '<h3>Orders</h3>';
+  if(subs.length===0) html += '<div class="small">No orders yet</div>';
+  else {
+    html += '<table style="width:100%"><tr><th>Payer</th><th>Plan</th><th>Price</th><th>Status</th><th>Action</th></tr>';
+    subs.slice().reverse().forEach(s=> html += `<tr><td>${s.payer||'Unknown'}</td><td>${s.type}</td><td>UGX ${s.price}</td><td>${s.status}</td><td>${s.status==='verified'?'<span class="small">Verified</span>':`<button class="btn" onclick="adminVerify(${s.id})">Verify</button>`}</td></tr>`);
+    html += '</table>';
+  }
+  html += '<div style="margin-top:8px"><button class="ghost" onclick="renderAdmin()">Back</button></div>';
+  w.innerHTML = html;
+}
+function adminVerify(id){
+  const subs = read(KEY_SUBS)||[]; const o = subs.find(x=>x.id===id); if(!o) return alert('Not found');
+  o.status = 'verified'; o.verifiedAt = Date.now();
+  // set expiry depending on type
+  const now = Date.now(); let dur = 0;
+  if(o.type==='daily') dur = 1*24*60*60*1000;
+  if(o.type==='weekly') dur = 7*24*60*60*1000;
+  if(o.type==='monthly') dur = 30*24*60*60*1000;
+  o.expires = now + dur;
+  write(KEY_SUBS, subs);
+  // also attach to user local profile (demo)
+  const user = read(KEY_USER) || {};
+  user.sub = { plan:o.type, price:o.price, expires:o.expires };
+  write(KEY_USER, user);
+  alert('Order verified and user subscription activated.');
+  adminListSubs(); populateUI();
+}
+
+/* admin chat */
+function adminOpenChat(){ const w = document.getElementById('adminWork'); const chats = read(KEY_CHATS) || []; let html = '<h3>Chats</h3>'; if(chats.length===0) html += '<div class="small">No messages</div>'; else { chats.slice().reverse().forEach((c,idx)=> html += `<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)"><strong style="color:var(--accent)">${c.name}</strong> <small class="small"> • ${c.time}</small><div style="margin-top:6px;color:#ddd">${c.text}</div><div style="margin-top:8px"><input id="reply-${idx}" placeholder="Reply..." style="padding:8px;border-radius:6px;background:#0b0b0b;border:1px solid rgba(255,255,255,0.03);width:70%"/> <button class="btn" onclick="adminReply(${idx})">Send</button></div>${c.reply?`<div style="margin-top:8px;color:#cfe4ff">Admin: ${c.reply}</div>`:''}</div>`); } html += '<div style="margin-top:8px"><button class="ghost" onclick="renderAdmin()">Back</button></div>'; w.innerHTML = html; }
+function adminReply(idx){
+  const chats = read(KEY_CHATS)||[]; const val = document.getElementById('reply-'+idx).value.trim(); if(!val) return alert('Enter reply');
+  const i = chats.length -1 - idx; if(i<0) return;
+  chats[i].reply = val; write(KEY_CHATS, chats); adminOpenChat(); renderChatBox();
+}
+
+/* demo helpers */
+function fillDemoAdmin(){
+  // create a sample pending order
+  const subs = read(KEY_SUBS) || []; subs.push({ id:Date.now(), payer:'DemoUser', type:'daily', price:1000, status:'submitted', timestamp:Date.now() }); write(KEY_SUBS, subs);
+  const chats = read(KEY_CHATS) || []; chats.push({ name:'Visitor', text:'Hello admin, how to subscribe?', time:new Date().toLocaleString() }); write(KEY_CHATS, chats);
+  alert('Demo order + chat created. Now login with admin password.');
+  renderAdmin();
+}
+
+/* LOGOUT (profile) */
+function doLogout(){
+  // clear local user (demo)
+  if(confirm('Log out? This will reset your profile locally (demo).')){
+    write(KEY_USER, {name:'Guest', contact:'', avatar:'', joined:Date.now(), sub:null});
+    populateUI();
+    alert('Logged out locally.');
+  }
+}
+
+/* small UI init */
+document.getElementById('year').innerText = new Date().getFullYear();
+renderChatBox();
+populateUI();
+showSection('home');
+
+/* helpers to open admin from header ghost button */
+document.querySelectorAll('.ghost').forEach(b=>{
+  // any ghost with admin intent will be handled by functions bound to buttons
+});
+</script>
+</body>
+</html>
+```0
